@@ -1,0 +1,79 @@
+const express = require("express");
+const app = express();
+const pool = require("./db");
+
+app.use(express.json());
+
+// ROUTES
+
+// get all todos
+app.get("/todos", async (req, res) => {
+     try {
+          const getTodos = await pool.query("SELECT * FROM todo");
+          res.json(getTodos.rows);
+     } catch (error) {
+          console.log(error.message);
+     }
+});
+
+// get a todo
+app.get("/todo/:id", async (req, res) => {
+     try {
+          const { id } = req.params;
+          const getTodo = await pool.query(
+               "SELECT * FROM todo WHERE todo_id = $1",
+               [id]
+          );
+          res.json(getTodo.rows[0]);
+     } catch (error) {
+          console.log(error.message);
+     }
+});
+
+// create a todo
+app.post("/todo", async (req, res) => {
+     try {
+          const { description } = req.body;
+          const newTodo = await pool.query(
+               "INSERT INTO todo (description) VALUES ($1) RETURNING *",
+               [description]
+          );
+          res.json(newTodo.rows[0]);
+     } catch (error) {
+          console.log(error.message);
+     }
+});
+
+// update a todo
+app.put("/todo/:id", async (req, res) => {
+     try {
+          const { id } = req.params;
+          const { description } = req.body;
+          const updateTodo = await pool.query(
+               "UPDATE todo SET description = $1 WHERE todo_id = $2",
+               [description, id]
+          );
+          res.json("todo updated!");
+     } catch (error) {
+          console.log(error.message);
+     }
+});
+
+// delete a todo
+app.delete("/todo/:id", async (req, res) => {
+     try {
+          const { id } = req.params;
+          const deleteTodo = await pool.query(
+               "DELETE FROM todo WHERE todo_id = $1",
+               [id]
+          );
+          res.json("Todo was deleted successfully!");
+     } catch (error) {
+          console.log(error.message);
+     }
+});
+
+// port
+app.listen(5000, () => {
+     console.log("server is listening on port 5000");
+});
